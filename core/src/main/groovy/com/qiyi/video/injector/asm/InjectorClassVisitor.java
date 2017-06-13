@@ -1,10 +1,11 @@
-package com.qiyi.video.injector.asm
+package com.qiyi.video.injector.asm;
 
-import com.qiyi.video.injector.Configuration
-import org.objectweb.asm.ClassVisitor
-import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes
+import com.qiyi.video.injector.Configuration;
+
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Created by linjianjun on 2017/5/27.
