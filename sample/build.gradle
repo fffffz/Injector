@@ -4,6 +4,8 @@ apply plugin: 'com.qiyi.video.injector'
 injector {
     leakCanaryClass = "org.icegeneral.injector.sample.LeakCanaryAdapter"
     trackClass = "org.icegeneral.injector.sample.Tracker"
+    watchFragment = true
+    trackActivity = true
 }
 
 android {

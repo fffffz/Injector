@@ -15,8 +15,10 @@ public class InjectorClassVisitor extends ClassVisitor {
     public static final String ACTIVITY = "android/app/Activity";
     public static final String FRAGMENT = "android/app/Fragment";
     public static final String V4FRAGMENT = "android/support/v4/app/Fragment";
-    public static final String ON_CREATE = "onCreate";
-    public static final String ON_CREATE_DESC = "(Landroid/os/Bundle;)V";
+    public static final String ON_RESUME = "onResume";
+    public static final String ON_RESUME_DESC = "()V";
+    public static final String ON_PAUSE = "onPause";
+    public static final String ON_PAUSE_DESC = "()V";
     public static final String ON_DESTROY = "onDestroy";
     public static final String ON_DESTROY_DESC = "()V";
 
@@ -31,13 +33,16 @@ public class InjectorClassVisitor extends ClassVisitor {
     private boolean superIsActivity;
     private boolean superIsFragment;
     private String superName;
-    private boolean isActivityOnCreateHandled;
+    private boolean isActivityOnResumeHandled;
+    private boolean isActivityOnPauseHandled;
     private boolean isActivityOnDestroyHandled;
-    private boolean isFragmentOnCreateHandled;
     private boolean isFragmentOnDestroyHandled;
 
+    private static final int TYPE_TRACK = 0;
+    private static final int TYPE_WATCH = 1;
+
     public boolean hasModified() {
-        return isActivityOnCreateHandled || isActivityOnDestroyHandled || isFragmentOnCreateHandled || isFragmentOnDestroyHandled;
+        return isActivityOnResumeHandled || isActivityOnDestroyHandled || isActivityOnPauseHandled || isFragmentOnDestroyHandled;
     }
 
     public InjectorClassVisitor(ClassWriter cw, Configuration configuration) {
@@ -58,10 +63,15 @@ public class InjectorClassVisitor extends ClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor mw = cw.visitMethod(access, name, desc, signature, exceptions);
         if (superIsActivity) {
-            if (configuration.track) {
-                if (name.equals(ON_CREATE) && desc.equals(ON_CREATE_DESC)) {
+            if (configuration.trackActivity) {
+                if (name.equals(ON_RESUME) && desc.equals(ON_RESUME_DESC)) {
                     injectTrack(mw, name);
-                    isActivityOnCreateHandled = true;
+                    isActivityOnResumeHandled = true;
+                    return new InjectorMethodVisitor(mw, configuration);
+                }
+                if (name.equals(ON_PAUSE) && desc.equals(ON_PAUSE_DESC)) {
+                    injectTrack(mw, name);
+                    isActivityOnPauseHandled = true;
                     return new InjectorMethodVisitor(mw, configuration);
                 }
                 if (name.equals(ON_DESTROY) && desc.equals(ON_DESTROY_DESC)) {
@@ -71,18 +81,8 @@ public class InjectorClassVisitor extends ClassVisitor {
                 }
             }
         } else if (superIsFragment) {
-            if (name.equals(ON_CREATE) && desc.equals(ON_CREATE_DESC)) {
-                if (configuration.track) {
-                    injectTrack(mw, name);
-                    isFragmentOnCreateHandled = true;
-                    return new InjectorMethodVisitor(mw, configuration);
-                }
-            } else if (name.equals(ON_DESTROY) && desc.equals(ON_DESTROY_DESC)) {
-                if (configuration.track) {
-                    injectTrack(mw, name);
-                    isFragmentOnDestroyHandled = true;
-                }
-                if (!configuration.leakCanary) {
+            if (name.equals(ON_DESTROY) && desc.equals(ON_DESTROY_DESC)) {
+                if (!configuration.watchFragment) {
                     injectWatch(mw);
                     isFragmentOnDestroyHandled = true;
                 }
@@ -95,58 +95,46 @@ public class InjectorClassVisitor extends ClassVisitor {
     @Override
     public void visitEnd() {
         if (superIsActivity) {
-            if (configuration.track) {
-                if (!isActivityOnCreateHandled) {
-                    injectSuper(ON_CREATE, ON_CREATE_DESC, true, false);
-                    isActivityOnCreateHandled = true;
+            if (configuration.trackActivity) {
+                if (!isActivityOnResumeHandled) {
+                    injectSuper(ON_RESUME, ON_RESUME_DESC, TYPE_TRACK);
+                    isActivityOnResumeHandled = true;
+                }
+                if (!isActivityOnPauseHandled) {
+                    injectSuper(ON_PAUSE, ON_PAUSE_DESC, TYPE_TRACK);
+                    isActivityOnPauseHandled = true;
                 }
                 if (!isActivityOnDestroyHandled) {
-                    injectSuper(ON_DESTROY, ON_DESTROY_DESC, true, false);
+                    injectSuper(ON_DESTROY, ON_DESTROY_DESC, TYPE_TRACK);
                     isActivityOnDestroyHandled = true;
                 }
             }
         } else if (superIsFragment) {
-            if (!isFragmentOnCreateHandled && configuration.track) {
-                injectSuper(ON_CREATE, ON_CREATE_DESC, true, false);
-                isFragmentOnCreateHandled = true;
-            }
-            if (!isFragmentOnDestroyHandled && (configuration.track || configuration.leakCanary)) {
-                injectSuper(ON_DESTROY, ON_DESTROY_DESC, configuration.track, configuration.leakCanary);
+            if (!isFragmentOnDestroyHandled && configuration.watchFragment) {
+                injectSuper(ON_DESTROY, ON_DESTROY_DESC, TYPE_WATCH);
                 isFragmentOnDestroyHandled = true;
             }
         }
         super.visitEnd();
     }
 
-    private void injectSuper(String methodName, String methodDesc, boolean track, boolean watch) {
+    private void injectSuper(String methodName, String methodDesc, int type) {
         MethodVisitor mw = cw.visitMethod(Opcodes.ACC_PUBLIC, methodName, methodDesc, null, null);
         mw.visitCode();
         int instCount = 0;
-        if (track) {
+        if (type == TYPE_TRACK) {
             injectTrack(mw, methodName);
             instCount++;
-        }
-        if (watch) {
+        } else if (type == TYPE_WATCH) {
             injectWatch(mw);
             instCount++;
         }
-        if (methodName.equals(ON_CREATE)) {
-            injectSuperOnCreate(mw, methodName, methodDesc);
-        } else if (methodName.equals(ON_DESTROY)) {
-            injectSuperOnDestroy(mw, methodName, methodDesc, instCount);
-        }
+        injectSuper(mw, methodName, methodDesc, instCount);
         mw.visitEnd();
     }
 
-    private void injectSuperOnCreate(MethodVisitor mw, String methodName, String methodDesc) {
-        mw.visitVarInsn(Opcodes.ALOAD, 0);
-        mw.visitVarInsn(Opcodes.ALOAD, 1);
-        mw.visitMethodInsn(Opcodes.INVOKESPECIAL, superName, methodName, methodDesc, false);
-        mw.visitInsn(Opcodes.RETURN);
-        mw.visitMaxs(2, 2);
-    }
 
-    private void injectSuperOnDestroy(MethodVisitor mw, String methodName, String methodDesc, int instCount) {
+    private void injectSuper(MethodVisitor mw, String methodName, String methodDesc, int instCount) {
         mw.visitVarInsn(Opcodes.ALOAD, 0);
         mw.visitMethodInsn(Opcodes.INVOKESPECIAL, superName, methodName, methodDesc, false);
         mw.visitInsn(Opcodes.RETURN);
@@ -162,7 +150,7 @@ public class InjectorClassVisitor extends ClassVisitor {
         mw.visitTypeInsn(Opcodes.NEW, "java/lang/StringBuilder");
         mw.visitInsn(Opcodes.DUP);
         mw.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
-        if (methodName.length() == ON_CREATE.length()) {
+        if (methodName.length() == ON_RESUME.length()) {
             methodName = methodName + " ";
         }
         mw.visitLdcInsn(methodName + " ");

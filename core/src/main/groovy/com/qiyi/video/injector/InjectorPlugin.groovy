@@ -20,16 +20,16 @@ public class InjectorPlugin implements Plugin<Project> {
             if (configuration == null) {
                 return
             }
-            configuration.leakCanary = configuration.leakCanaryClass != null ? configuration.leakCanaryClass.length() > 0 : false
-            configuration.track = configuration.trackClass != null ? configuration.trackClass.length() > 0 : false
-            if (!configuration.leakCanary && !configuration.track) {
+            configuration.watchFragment = configuration.leakCanaryClass != null ? configuration.leakCanaryClass.length() > 0 : false
+            configuration.trackActivity = configuration.trackClass != null ? configuration.trackClass.length() > 0 : false
+            if (!configuration.watchFragment && !configuration.trackActivity) {
                 return
             }
-            if (configuration.leakCanary) {
+            if (configuration.watchFragment) {
                 configuration.leakCanaryClass = configuration.leakCanaryClass.replaceAll("\\.", "/")
                 System.out.println("-----injector----- configuration.leakCanaryClass=" + configuration.leakCanaryClass)
             }
-            if (configuration.track) {
+            if (configuration.trackActivity) {
                 configuration.trackClass = configuration.trackClass.replaceAll("\\.", "/")
                 System.out.println("-----injector----- configuration.trackClass=" + configuration.trackClass)
             }
