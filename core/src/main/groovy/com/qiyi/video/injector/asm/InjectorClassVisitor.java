@@ -29,19 +29,19 @@ public class InjectorClassVisitor extends ClassVisitor {
     public static final String TRACK = "track";
     public static final String TRACK_DESC = "(Ljava/lang/String;)V";
 
-    private final Configuration configuration;
-    private final ClassWriter cw;
+    final Configuration configuration;
+    final ClassWriter cw;
 
-    private boolean superIsActivity;
-    private boolean superIsFragment;
-    private String superName;
-    private boolean isActivityOnResumeHandled;
-    private boolean isActivityOnPauseHandled;
-    private boolean isFragmentOnDestroyHandled;
-    private boolean hasModified;
+    boolean superIsActivity;
+    boolean superIsFragment;
+    String superName;
+    boolean isActivityOnResumeHandled;
+    boolean isActivityOnPauseHandled;
+    boolean isFragmentOnDestroyHandled;
+    boolean hasModified;
 
-    private static final int TYPE_TRACK = 0;
-    private static final int TYPE_WATCH = 1;
+    static final int TYPE_TRACK = 0;
+    static final int TYPE_WATCH = 1;
 
     public boolean hasModified() {
         return isActivityOnResumeHandled || isActivityOnPauseHandled || isFragmentOnDestroyHandled || hasModified;
