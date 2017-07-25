@@ -17,13 +17,20 @@ public class Utils {
         }
         if (view instanceof TextView) {
             TextView textView = (TextView) view;
-            return textView.getText().toString();
+            String text = textView.getText().toString();
+            if (!TextUtils.isEmpty(text)) {
+                return "点击 " + text.trim();
+            }
         }
         String text = deepSearchChildText(view);
         if (!TextUtils.isEmpty(text)) {
-            return text;
+            return "点击 " + text.trim();
         }
-        return deepSearchParentText(view);
+        text = deepSearchParentText(view);
+        if (!TextUtils.isEmpty(text)) {
+            return "点击 " + text.trim();
+        }
+        return "";
     }
 
     public static String deepSearchChildText(View view) {
@@ -32,7 +39,7 @@ public class Utils {
         }
         if (view instanceof TextView) {
             TextView textView = (TextView) view;
-            return textView.getText().toString();
+            return textView.getText().toString().trim();
         }
         if (view instanceof ViewGroup) {
             StringBuilder sb = null;
@@ -44,7 +51,7 @@ public class Utils {
                         sb = new StringBuilder();
                     }
                     TextView textView = (TextView) child;
-                    sb.append(textView.getText().toString());
+                    sb.append(textView.getText().toString().trim());
                 }
             }
             if (sb != null && sb.length() > 0) {
@@ -70,7 +77,7 @@ public class Utils {
                         sb = new StringBuilder();
                     }
                     TextView textView = (TextView) child;
-                    sb.append(textView.getText().toString());
+                    sb.append(textView.getText().toString().trim());
                 }
             }
             if (sb != null && sb.length() > 0) {
@@ -81,7 +88,7 @@ public class Utils {
                 if (child != view) {
                     String text = deepSearchChildText(view);
                     if (!TextUtils.isEmpty(text)) {
-                        return text;
+                        return text.trim();
                     }
                 }
             }

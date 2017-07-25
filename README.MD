@@ -40,7 +40,8 @@ onDestroy 中插入 LeakCanaryAdapter.watch(this)
 
 **trackTarget**
 
-读取json配置文件，例如 sample 中的配置表示
+读取json配置文件，其中 argIndexes 1 代表 onClick 方法的第 1 个参数，0 代表 this
+sample 中的配置表示
 
 ````
 public void onClick(View view) {
