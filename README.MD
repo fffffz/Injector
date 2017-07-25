@@ -16,8 +16,13 @@ buildscript {
 apply plugin: 'com.qiyi.video.injector'
 
 injector {
-    leakCanaryClass = "org/icegeneral/injector/sample/LeakCanaryAdapter"
-    trackClass = "org/icegeneral/injector/sample/Tracker"
+    leakCanaryClass = "org.icegeneral.injector.sample.LeakCanaryAdapter"
+    watchFragment = true
+
+    trackClass = "org.icegeneral.injector.sample.Tracker"
+    trackActivity = true
+
+    trackTargetFile = "C:/Code/Injector/sample/track.json"
 }
 ````
 
@@ -25,12 +30,21 @@ injector {
 
 **Activity**
 
-onCreate  中插入 Tracker.track("onCreate  "+getClass().getName())
+onResume  中插入 Tracker.track("onResume "+ getClass().getName())
 
-onDestroy 中插入 Tracker.track("onDestroy "+getClass().getName())
+onPause   中插入 Tracker.track("onPause  "+ getClass().getName())
 
 **Fragment**
 
-onCreate  中插入 Tracker.track("onCreate  "+getClass().getName())
+onDestroy 中插入 LeakCanaryAdapter.watch(this)
 
-onDestroy 中插入 Tracker.track("onDestroy "+getClass().getName()) 和 LeakCanaryAdapter.watch(this)
+**trackTarget**
+
+读取json配置文件，例如 sample 中的配置表示
+
+````
+public void onClick(View view) {
+    Tracker.track(Utils.getClickText(view));
+    ...
+}
+````

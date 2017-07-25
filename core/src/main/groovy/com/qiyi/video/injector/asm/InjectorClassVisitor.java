@@ -1,6 +1,7 @@
 package com.qiyi.video.injector.asm;
 
 import com.qiyi.video.injector.Configuration;
+import com.qiyi.video.injector.TrackTarget;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -15,6 +16,7 @@ public class InjectorClassVisitor extends ClassVisitor {
     public static final String ACTIVITY = "android/app/Activity";
     public static final String FRAGMENT = "android/app/Fragment";
     public static final String V4FRAGMENT = "android/support/v4/app/Fragment";
+
     public static final String ON_RESUME = "onResume";
     public static final String ON_RESUME_DESC = "()V";
     public static final String ON_PAUSE = "onPause";
@@ -35,14 +37,14 @@ public class InjectorClassVisitor extends ClassVisitor {
     private String superName;
     private boolean isActivityOnResumeHandled;
     private boolean isActivityOnPauseHandled;
-    private boolean isActivityOnDestroyHandled;
     private boolean isFragmentOnDestroyHandled;
+    private boolean hasModified;
 
     private static final int TYPE_TRACK = 0;
     private static final int TYPE_WATCH = 1;
 
     public boolean hasModified() {
-        return isActivityOnResumeHandled || isActivityOnDestroyHandled || isActivityOnPauseHandled || isFragmentOnDestroyHandled;
+        return isActivityOnResumeHandled || isActivityOnPauseHandled || isFragmentOnDestroyHandled || hasModified;
     }
 
     public InjectorClassVisitor(ClassWriter cw, Configuration configuration) {
@@ -74,11 +76,6 @@ public class InjectorClassVisitor extends ClassVisitor {
                     isActivityOnPauseHandled = true;
                     return new InjectorMethodVisitor(mw, configuration);
                 }
-                if (name.equals(ON_DESTROY) && desc.equals(ON_DESTROY_DESC)) {
-                    injectTrack(mw, name);
-                    isActivityOnDestroyHandled = true;
-                    return new InjectorMethodVisitor(mw, configuration);
-                }
             }
         } else if (superIsFragment) {
             if (name.equals(ON_DESTROY) && desc.equals(ON_DESTROY_DESC)) {
@@ -87,6 +84,15 @@ public class InjectorClassVisitor extends ClassVisitor {
                     isFragmentOnDestroyHandled = true;
                 }
                 return new InjectorMethodVisitor(mw, configuration);
+            }
+        }
+        if (configuration.trackTargets != null) {
+            for (TrackTarget trackTarget : configuration.trackTargets) {
+                if (name.equals(trackTarget.methodName) && desc.equals(trackTarget.methodDesc)) {
+                    injectTrackTarget(mw, trackTarget.inst);
+                    hasModified = true;
+                    return new InjectorMethodVisitor(mw, configuration);
+                }
             }
         }
         return mw;
@@ -103,10 +109,6 @@ public class InjectorClassVisitor extends ClassVisitor {
                 if (!isActivityOnPauseHandled) {
                     injectSuper(ON_PAUSE, ON_PAUSE_DESC, TYPE_TRACK);
                     isActivityOnPauseHandled = true;
-                }
-                if (!isActivityOnDestroyHandled) {
-                    injectSuper(ON_DESTROY, ON_DESTROY_DESC, TYPE_TRACK);
-                    isActivityOnDestroyHandled = true;
                 }
             }
         } else if (superIsFragment) {
@@ -150,7 +152,7 @@ public class InjectorClassVisitor extends ClassVisitor {
         mw.visitTypeInsn(Opcodes.NEW, "java/lang/StringBuilder");
         mw.visitInsn(Opcodes.DUP);
         mw.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
-        if (methodName.length() == ON_RESUME.length()) {
+        if (methodName.length() == ON_PAUSE.length()) {
             methodName = methodName + " ";
         }
         mw.visitLdcInsn(methodName + " ");
@@ -160,6 +162,16 @@ public class InjectorClassVisitor extends ClassVisitor {
         mw.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getName", "()Ljava/lang/String;", false);
         mw.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false);
         mw.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false);
+        mw.visitMethodInsn(Opcodes.INVOKESTATIC, configuration.trackClass, TRACK, TRACK_DESC, false);
+    }
+
+    private void injectTrackTarget(MethodVisitor mw, TrackTarget.Inst inst) {
+        if (inst.argIndexes != null) {
+            for (int argIndex : inst.argIndexes) {
+                mw.visitVarInsn(Opcodes.ALOAD, argIndex);
+            }
+        }
+        mw.visitMethodInsn(Opcodes.INVOKESTATIC, inst.owner, inst.methodName, inst.methodDesc, false);
         mw.visitMethodInsn(Opcodes.INVOKESTATIC, configuration.trackClass, TRACK, TRACK_DESC, false);
     }
 

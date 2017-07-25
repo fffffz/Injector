@@ -1,0 +1,15 @@
+[
+  {
+    "methodName": "onClick",
+    "methodDesc": "(Landroid/view/View;)V",
+    "inst": {
+      "owner": "org/icegeneral/injector/sample/Utils",
+      "methodName": "getClickText",
+      "methodDesc": "(Landroid/view/View;)Ljava/lang/String;",
+      //argIndexes 1 代表 onClick 方法的第 1 个参数，0 代表 this
+      "argIndexes": [
+        1
+      ]
+    }
+  }
+]
