@@ -1,5 +1,6 @@
 [
   {
+    "className": "org/icegeneral/injector/sample/MainActivity",
     "methodName": "onClick",
     "methodDesc": "(Landroid/view/View;)V",
     "inst": {

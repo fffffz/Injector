@@ -3,6 +3,8 @@ package com.qiyi.video.injector.asm;
 import com.qiyi.video.injector.Configuration;
 import com.qiyi.video.injector.TrackTarget;
 
+import org.gradle.internal.impldep.org.apache.http.util.TextUtils;
+import org.gradle.util.TextUtil;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
@@ -35,6 +37,7 @@ public class InjectorClassVisitor extends ClassVisitor {
     boolean superIsActivity;
     boolean superIsFragment;
     String superName;
+    String className;
     boolean isActivityOnResumeHandled;
     boolean isActivityOnPauseHandled;
     boolean isFragmentOnDestroyHandled;
@@ -58,6 +61,7 @@ public class InjectorClassVisitor extends ClassVisitor {
         superIsActivity = superName.equals(ACTIVITY);
         superIsFragment = superName.equals(FRAGMENT) || superName.equals(V4FRAGMENT);
         this.superName = superName;
+        this.className = name;
         super.visit(version, access, name, signature, superName, interfaces);
     }
 
@@ -88,7 +92,8 @@ public class InjectorClassVisitor extends ClassVisitor {
         }
         if (configuration.trackTargets != null) {
             for (TrackTarget trackTarget : configuration.trackTargets) {
-                if (name.equals(trackTarget.methodName) && desc.equals(trackTarget.methodDesc)) {
+                if ((trackTarget.className == null || trackTarget.className.trim().equals("") || trackTarget.className.equals(className)) &&
+                        name.equals(trackTarget.methodName) && desc.equals(trackTarget.methodDesc)) {
                     injectTrackTarget(mw, trackTarget.inst);
                     hasModified = true;
                     return new InjectorMethodVisitor(mw, configuration);
