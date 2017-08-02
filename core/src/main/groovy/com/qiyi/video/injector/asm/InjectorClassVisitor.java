@@ -83,7 +83,7 @@ public class InjectorClassVisitor extends ClassVisitor {
             }
         } else if (superIsFragment) {
             if (name.equals(ON_DESTROY) && desc.equals(ON_DESTROY_DESC)) {
-                if (!configuration.watchFragment) {
+                if (configuration.watchFragment) {
                     injectWatch(mw);
                     isFragmentOnDestroyHandled = true;
                 }
