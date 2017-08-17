@@ -3,8 +3,6 @@ package com.qiyi.video.injector.asm;
 import com.qiyi.video.injector.Configuration;
 import com.qiyi.video.injector.TrackTarget;
 
-import org.gradle.internal.impldep.org.apache.http.util.TextUtils;
-import org.gradle.util.TextUtil;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
@@ -108,25 +106,25 @@ public class InjectorClassVisitor extends ClassVisitor {
         if (superIsActivity) {
             if (configuration.trackActivity) {
                 if (!isActivityOnResumeHandled) {
-                    injectSuper(ON_RESUME, ON_RESUME_DESC, TYPE_TRACK);
+                    injectSuper(Opcodes.ACC_PROTECTED, ON_RESUME, ON_RESUME_DESC, TYPE_TRACK);
                     isActivityOnResumeHandled = true;
                 }
                 if (!isActivityOnPauseHandled) {
-                    injectSuper(ON_PAUSE, ON_PAUSE_DESC, TYPE_TRACK);
+                    injectSuper(Opcodes.ACC_PROTECTED, ON_PAUSE, ON_PAUSE_DESC, TYPE_TRACK);
                     isActivityOnPauseHandled = true;
                 }
             }
         } else if (superIsFragment) {
             if (!isFragmentOnDestroyHandled && configuration.watchFragment) {
-                injectSuper(ON_DESTROY, ON_DESTROY_DESC, TYPE_WATCH);
+                injectSuper(Opcodes.ACC_PUBLIC, ON_DESTROY, ON_DESTROY_DESC, TYPE_WATCH);
                 isFragmentOnDestroyHandled = true;
             }
         }
         super.visitEnd();
     }
 
-    private void injectSuper(String methodName, String methodDesc, int type) {
-        MethodVisitor mw = cw.visitMethod(Opcodes.ACC_PUBLIC, methodName, methodDesc, null, null);
+    private void injectSuper(int access, String methodName, String methodDesc, int type) {
+        MethodVisitor mw = cw.visitMethod(access, methodName, methodDesc, null, null);
         mw.visitCode();
         int instCount = 0;
         if (type == TYPE_TRACK) {
