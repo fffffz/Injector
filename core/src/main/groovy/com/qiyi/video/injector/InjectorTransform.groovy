@@ -29,6 +29,7 @@ public class InjectorTransform extends Transform {
             if (jarInputs != null) {
                 for (JarInput jarInput : jarInputs) {
                     File outJar = transformInvocation.outputProvider.getContentLocation(jarInput.name, jarInput.contentTypes, jarInput.scopes, Format.JAR)
+                    outJar.parentFile.mkdirs()
                     InjectUtil.injectJar(project, jarInput.file, outJar, configuration)
                 }
                 FileUtil.delete(new File(project.buildDir.absolutePath + "/com.qiyi.video.injector"))
