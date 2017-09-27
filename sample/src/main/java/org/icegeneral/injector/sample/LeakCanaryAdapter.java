@@ -19,6 +19,7 @@ public class LeakCanaryAdapter {
     }
 
     public static void watch(Object obj) {
+
         if (sRefWatcher != null) {
             sRefWatcher.watch(obj);
         }

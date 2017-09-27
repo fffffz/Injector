@@ -1,17 +1,17 @@
 package com.qiyi.video.injector
 
 import com.android.build.api.transform.*
+import com.android.build.gradle.internal.pipeline.TransformManager
 import com.qiyi.video.injector.util.FileUtil
-import org.gradle.api.Project
 import com.qiyi.video.injector.util.InjectUtil
+import org.gradle.api.Project
 
-public class InjectorTransform extends TransformProxy {
+public class InjectorTransform extends Transform {
 
     private Project project
     private Configuration configuration
 
-    public InjectorTransform(Project project, Transform base, Configuration configuration) {
-        super(base)
+    public InjectorTransform(Project project, Configuration configuration) {
         this.project = project
         this.configuration = configuration
     }
@@ -28,17 +28,32 @@ public class InjectorTransform extends TransformProxy {
             Collection<JarInput> jarInputs = input.jarInputs
             if (jarInputs != null) {
                 for (JarInput jarInput : jarInputs) {
-                    /**
-                     * 只扫描 build 目录下的 jar
-                     */
-                    if (jarInput.file.absolutePath.startsWith(project.buildDir.absolutePath)) {
-                        InjectUtil.injectJar(project, jarInput.file, configuration)
-                    }
+                    File outJar = transformInvocation.outputProvider.getContentLocation(jarInput.name, jarInput.contentTypes, jarInput.scopes, Format.JAR)
+                    InjectUtil.injectJar(project, jarInput.file, outJar, configuration)
                 }
                 FileUtil.delete(new File(project.buildDir.absolutePath + "/com.qiyi.video.injector"))
             }
         }
-        base.transform(transformInvocation);
+    }
+
+    @Override
+    String getName() {
+        return "inject"
+    }
+
+    @Override
+    Set<QualifiedContent.ContentType> getInputTypes() {
+        return TransformManager.CONTENT_JARS
+    }
+
+    @Override
+    Set<QualifiedContent.Scope> getScopes() {
+        return TransformManager.SCOPE_FULL_PROJECT;
+    }
+
+    @Override
+    boolean isIncremental() {
+        return false
     }
 
 }

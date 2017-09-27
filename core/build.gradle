@@ -16,7 +16,7 @@ uploadArchives {
         mavenDeployer {
             pom.groupId = 'com.qiyi.video'
             pom.artifactId = 'injector'
-            pom.version = "1.0.4"
+            pom.version = "1.0.5"
             repository(url: uri('out'))
         }
     }

@@ -1,26 +1,19 @@
-package com.qiyi.video.injector.util;
+package com.qiyi.video.injector.util
 
-import android.ZipUtil;
+import android.ZipUtil
+import com.qiyi.video.injector.Configuration
+import com.qiyi.video.injector.asm.InjectorClassVisitor
+import org.gradle.api.Project
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassWriter
 
-import com.qiyi.video.injector.Configuration;
-import com.qiyi.video.injector.asm.InjectorClassVisitor;
-
-import org.gradle.api.Project;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 
 public class InjectUtil {
 
-    public static void injectJar(Project project, File jar, Configuration configuration) throws IOException {
+    public
+    static void injectJar(Project project, File jar, File outJar, Configuration configuration) throws IOException {
         File tmpDir = new File(project.buildDir.absolutePath + "/com.qiyi.video.injector/" + jar.absolutePath.substring(project.buildDir.absolutePath.length()))
         FileUtil.delete(tmpDir);
         ZipFile zipFile = new ZipFile(jar);
@@ -37,12 +30,13 @@ public class InjectUtil {
                 }
             }
         }
-        if (!hasModified) {
-            return;
+        if (hasModified) {
+            ZipUtil.extractZip(zipFile, tmpDir, false);
+            project.ant.zip(baseDir: tmpDir, destFile: outJar)
+            FileUtil.delete(tmpDir);
+        } else {
+            android.FileUtil.copyFile(jar, outJar);
         }
-        ZipUtil.extractZip(zipFile, tmpDir, false);
-        project.ant.zip(baseDir:tmpDir, destFile:jar)
-        FileUtil.delete(tmpDir);
     }
 
     public static void injectDir(File file, Configuration configuration) throws IOException {
@@ -59,7 +53,8 @@ public class InjectUtil {
         }
     }
 
-    public static boolean injectClass(File inputFile, File outputFile, Configuration configuration) throws IOException {
+    public
+    static boolean injectClass(File inputFile, File outputFile, Configuration configuration) throws IOException {
         if (inputFile == null || !inputFile.exists() || inputFile.isDirectory() || !inputFile.getName().endsWith(".class") || outputFile == null) {
             return false;
         }
@@ -70,7 +65,8 @@ public class InjectUtil {
         return hasModified;
     }
 
-    public static boolean injectClass(InputStream inputStream, File outputFile, Configuration configuration) {
+    public
+    static boolean injectClass(InputStream inputStream, File outputFile, Configuration configuration) {
         try {
             ClassReader cr = new ClassReader(inputStream);
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
