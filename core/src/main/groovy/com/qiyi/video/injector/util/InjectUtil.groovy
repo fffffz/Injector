@@ -30,6 +30,7 @@ public class InjectUtil {
                 }
             }
         }
+        outJar.parentFile.mkdirs()
         if (hasModified) {
             ZipUtil.extractZip(zipFile, tmpDir, false);
             project.ant.zip(baseDir: tmpDir, destFile: outJar)
