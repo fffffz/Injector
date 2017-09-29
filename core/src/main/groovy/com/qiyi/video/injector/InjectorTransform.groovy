@@ -22,7 +22,8 @@ public class InjectorTransform extends Transform {
             Collection<DirectoryInput> directoryInputs = input.directoryInputs
             if (directoryInputs != null) {
                 for (DirectoryInput directoryInput : directoryInputs) {
-                    InjectUtil.injectDir(directoryInput.file, configuration)
+                    File outDir = transformInvocation.outputProvider.getContentLocation(directoryInput.name, directoryInput.contentTypes, directoryInput.scopes, Format.DIRECTORY)
+                    InjectUtil.injectDir(directoryInput.file, outDir, configuration)
                 }
             }
             Collection<JarInput> jarInputs = input.jarInputs

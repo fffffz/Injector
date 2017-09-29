@@ -12,8 +12,7 @@ import java.util.zip.ZipFile
 
 public class InjectUtil {
 
-    public
-    static void injectJar(Project project, File jar, File outJar, Configuration configuration) throws IOException {
+    public static void injectJar(Project project, File jar, File outJar, Configuration configuration) throws IOException {
         File tmpDir = new File(project.buildDir.absolutePath + "/com.qiyi.video.injector/" + jar.absolutePath.substring(project.buildDir.absolutePath.length()))
         FileUtil.delete(tmpDir);
         ZipFile zipFile = new ZipFile(jar);
@@ -40,46 +39,42 @@ public class InjectUtil {
         }
     }
 
-    public static void injectDir(File file, Configuration configuration) throws IOException {
+    public static void injectDir(File file, File outFile, Configuration configuration) throws IOException {
         if (file.isDirectory()) {
             for (File child : file.listFiles()) {
                 if (child.isDirectory()) {
-                    injectDir(child, configuration);
+                    injectDir(child, new File(outFile, child.getName()), configuration);
                 } else {
-                    injectClass(child, child, configuration);
+                    injectClass(child, new File(outFile, child.getName()), configuration);
                 }
             }
         } else {
-            injectClass(file, file, configuration);
+            injectClass(file, new File(outFile, file.getName()), configuration);
         }
     }
 
-    public
-    static boolean injectClass(File inputFile, File outputFile, Configuration configuration) throws IOException {
-        if (inputFile == null || !inputFile.exists() || inputFile.isDirectory() || !inputFile.getName().endsWith(".class") || outputFile == null) {
+    public static boolean injectClass(File inputFile, File outFile, Configuration configuration) throws IOException {
+        if (inputFile == null || !inputFile.exists() || inputFile.isDirectory() || !inputFile.getName().endsWith(".class")) {
             return false;
         }
-        boolean hasModified = injectClass(new FileInputStream(inputFile), outputFile, configuration);
+        boolean hasModified = injectClass(new FileInputStream(inputFile), outFile, configuration);
         if (hasModified) {
             System.out.println("-----injector----- inject " + inputFile.getAbsolutePath());
         }
         return hasModified;
     }
 
-    public
-    static boolean injectClass(InputStream inputStream, File outputFile, Configuration configuration) {
+    public static boolean injectClass(InputStream inputStream, File outFile, Configuration configuration) {
         try {
             ClassReader cr = new ClassReader(inputStream);
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             InjectorClassVisitor cv = new InjectorClassVisitor(cw, configuration);
             cr.accept(cv, ClassReader.SKIP_DEBUG);
-            if (cv.hasModified()) {
-                outputFile.getParentFile().mkdirs();
-                FileOutputStream fos = new FileOutputStream(outputFile);
-                fos.write(cw.toByteArray());
-                fos.close();
-                return true;
-            }
+            outFile.getParentFile().mkdirs();
+            FileOutputStream fos = new FileOutputStream(outFile);
+            fos.write(cw.toByteArray());
+            fos.close();
+            return cv.hasModified();
         } catch (Exception e) {
             e.printStackTrace();
         }
