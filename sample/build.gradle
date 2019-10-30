@@ -2,25 +2,23 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.qiyi.video.injector'
 
 injector {
-    leakCanaryClass = "org.icegeneral.injector.sample.LeakCanaryAdapter"
+    leakCanaryClass = "com.fffz.injector.sample.LeakCanaryAdapter"
     watchFragment = true
 
-    trackClass = "org.icegeneral.injector.sample.Tracker"
+    trackClass = "com.fffz.injector.sample.Tracker"
     trackActivity = true
 
-    trackTargetFile = "C:/Code/Injector/sample/track.json"
+    trackTargetFile = "track.json"
 }
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.3"
+    compileSdkVersion 29
     defaultConfig {
-        applicationId "org.icegeneral.injector.sample"
+        applicationId "com.fffz.injector.sample"
         minSdkVersion 14
-        targetSdkVersion 26
+        targetSdkVersion 29
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }
     buildTypes {
@@ -39,11 +37,7 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:support-v4:25.0.0'
-    compile 'com.squareup.leakcanary:leakcanary-android:1.5.1'
+    api fileTree(include: ['*.jar'], dir: 'libs')
+    api 'com.android.support:support-v4:27.1.1'
+    api 'com.squareup.leakcanary:leakcanary-android:1.5.1'
 }

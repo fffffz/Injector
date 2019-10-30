@@ -16,13 +16,13 @@ buildscript {
 apply plugin: 'com.qiyi.video.injector'
 
 injector {
-    leakCanaryClass = "org.icegeneral.injector.sample.LeakCanaryAdapter"
+    leakCanaryClass = "com.fffz.injector.sample.LeakCanaryAdapter"
     watchFragment = true
 
-    trackClass = "org.icegeneral.injector.sample.Tracker"
+    trackClass = "com.fffz.injector.sample.Tracker"
     trackActivity = true
 
-    trackTargetFile = "C:/Code/Injector/sample/track.json"
+    trackTargetFile = "track.json"
 }
 ````
 

@@ -24,5 +24,5 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keep class org.icegeneral.injector.sample.LeakCanaryAdapter {*;}
--keep class org.icegeneral.injector.sample.Tracker {*;}
+-keep class com.fffz.injector.sample.LeakCanaryAdapter {*;}
+-keep class com.fffz.injector.sample.Tracker {*;}
